@@ -1,0 +1,52 @@
+@host = https://localhost:7227
+
+### Session before authentication
+
+GET {{host}}/api/auth/session
+Accept: application/json
+
+### Get CSRF token
+
+GET {{host}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.global.set("csrfToken", response.body.token);
+%}
+
+### Login
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+X-XSRF-TOKEN: {{csrfToken}}
+
+{
+  "email": "user@demo.test",
+  "password": "DemoPassword1!"
+}
+
+### Session after authentication
+
+GET {{host}}/api/auth/session
+Accept: application/json
+
+### Refresh CSRF token after authentication
+
+GET {{host}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.global.set("csrfToken", response.body.token);
+%}
+
+### Logout
+
+POST {{host}}/api/auth/logout
+X-XSRF-TOKEN: {{csrfToken}}
+
+### Session after logout
+
+GET {{host}}/api/auth/session
+Accept: application/json
+
+###
