@@ -52,6 +52,28 @@ builder.Services.AddAntiforgery(options =>
             : CookieSecurePolicy.Always;
 });
 
+var allowedOrigins =
+    builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>()
+    ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        SecurityConstants.SpaCorsPolicyName,
+        policy =>
+        {
+            policy
+                .WithOrigins(allowedOrigins)
+                .WithMethods(
+                    HttpMethods.Get,
+                    HttpMethods.Post)
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+});
+
 var databaseName = $"SpaCookieAuth-{Guid.NewGuid():N}";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -125,6 +147,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(SecurityConstants.SpaCorsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();
