@@ -18,6 +18,17 @@ internal sealed class ApiWebApplicationFactory
             });
     }
 
+    public HttpClient CreateHttpClient()
+    {
+        return CreateClient(
+            new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("http://localhost"),
+                HandleCookies = true
+            });
+    }
+
     public async Task SeedDemoUserAsync()
     {
         await using var scope = Services.CreateAsyncScope();

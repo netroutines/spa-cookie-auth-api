@@ -90,8 +90,8 @@ included.
 
 ## Notes
 
-The development CORS configuration allows `https://localhost:5173` by default. Add or replace origins in
-`src/SpaCookieAuth.Api/appsettings.Development.json` to match your SPA development server.
+The development CORS configuration allows both `https://localhost:5173` and `http://localhost:5173` by default. Add or
+replace origins in `src/SpaCookieAuth.Api/appsettings.Development.json` to match your SPA development server.
 
 For production use, replace EF Core InMemory with a persistent database and review Data Protection key persistence,
 HTTPS/reverse-proxy configuration, secrets management, and production CORS origins.

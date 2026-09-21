@@ -18,9 +18,5 @@ updates:
       - "/tests/SpaCookieAuth.Api.Tests"
     schedule:
       interval: "weekly"
-    cooldown:
-      default-days: 5
-    groups:
-      nuget:
-        patterns:
-          - "*"
+
+    open-pull-requests-limit: 0

@@ -368,6 +368,96 @@ public sealed class AuthEndpointsTests
             logoutResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Http_login_works_in_development_with_non_secure_cookies()
+    {
+        await using var factory = new ApiWebApplicationFactory();
+        await factory.SeedDemoUserAsync();
+
+        using var client = factory.CreateHttpClient();
+
+        using var csrfResponse =
+            await client.GetAsync("/api/auth/csrf");
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            csrfResponse.StatusCode);
+
+        var csrfPayload =
+            await csrfResponse.Content
+                .ReadFromJsonAsync<CsrfTokenResponse>();
+
+        Assert.NotNull(csrfPayload);
+        Assert.False(
+            string.IsNullOrWhiteSpace(csrfPayload.Token));
+
+        var antiforgeryCookie = GetCookie(
+            csrfResponse,
+            SecurityConstants.AntiforgeryCookieName);
+
+        var normalizedAntiforgeryCookie =
+            antiforgeryCookie.ToLowerInvariant();
+
+        Assert.Contains(
+            "httponly",
+            normalizedAntiforgeryCookie);
+
+        Assert.Contains(
+            "samesite=lax",
+            normalizedAntiforgeryCookie);
+
+        Assert.DoesNotContain(
+            "; secure",
+            normalizedAntiforgeryCookie);
+
+        using var loginResponse = await PostLoginAsync(
+            client,
+            csrfPayload.Token,
+            DemoUserSeeder.Email,
+            DemoUserSeeder.Password);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            loginResponse.StatusCode);
+
+        var authenticationCookie = GetCookie(
+            loginResponse,
+            SecurityConstants.AuthenticationCookieName);
+
+        var normalizedAuthenticationCookie =
+            authenticationCookie.ToLowerInvariant();
+
+        Assert.Contains(
+            "httponly",
+            normalizedAuthenticationCookie);
+
+        Assert.Contains(
+            "samesite=lax",
+            normalizedAuthenticationCookie);
+
+        Assert.DoesNotContain(
+            "; secure",
+            normalizedAuthenticationCookie);
+
+        using var sessionResponse =
+            await client.GetAsync("/api/auth/session");
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            sessionResponse.StatusCode);
+
+        var session =
+            await sessionResponse.Content
+                .ReadFromJsonAsync<AuthSessionResponse>();
+
+        Assert.NotNull(session);
+        Assert.True(session.Authenticated);
+        Assert.NotNull(session.User);
+        Assert.Equal(
+            DemoUserSeeder.Email,
+            session.User.Email);
+    }
+
     private static async Task<string> GetCsrfTokenAsync(
         HttpClient client)
     {

@@ -12,8 +12,11 @@ public sealed class CorsTests
     private const string DisallowedOrigin =
         "https://example.test";
 
-    [Fact]
-    public async Task Allowed_origin_receives_cors_headers()
+    [Theory]
+    [InlineData("https://localhost:5173")]
+    [InlineData("http://localhost:5173")]
+    public async Task Allowed_origin_receives_cors_headers(
+        string origin)
     {
         await using var factory = new ApiWebApplicationFactory();
         using var client = factory.CreateHttpsClient();
@@ -25,7 +28,7 @@ public sealed class CorsTests
 
         request.Headers.Add(
             "Origin",
-            AllowedOrigin);
+            origin);
 
         using var response =
             await client.SendAsync(request);
@@ -35,7 +38,7 @@ public sealed class CorsTests
             response.StatusCode);
 
         Assert.Equal(
-            AllowedOrigin,
+            origin,
             GetSingleHeader(
                 response,
                 "Access-Control-Allow-Origin"));
